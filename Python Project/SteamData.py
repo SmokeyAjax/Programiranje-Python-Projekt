@@ -49,11 +49,13 @@ class SteamUser:  # kaj če bi dala ime Gamer al kj tazga? Ker ga definirava kot
 
         return self.steamFriendNames, self.steamFriendIDs  # (ime, ID)
 
+    
     def howManyFriends(self):
         '''
             vrne število prijateljev
         '''
         return len(self.getFriends()[0])
+
 
     def getSteamUserLevel(self):
         '''
@@ -63,13 +65,23 @@ class SteamUser:  # kaj če bi dala ime Gamer al kj tazga? Ker ga definirava kot
         self.steamUserLevel = re.sub(r'<[^>]+>', "", self.steamUserLevel[0])
         return self.steamUserLevel
 
+
     def getFeaturedGames(self):
         '''
             vrne "Featured Games"
             igre ka jih ima uporabnik "raskzane", ponavad njegove najljubše/ najbol igrane
             raskazane ima lahko od 0-4
         '''
-        # še pride
+        self.featuredGames = re.findall(r'<div class="showcase_slot showcase_gamecollector_game[^h]+href="https://steamcommunity.com/app/[^"]+', self.steamProfileText)
+        for i, game in enumerate(self.featuredGames):
+             self.featuredGames[i] = game.split('href="')[1]
+             self.featuredGames[i] = re.findall(r'<title>Steam Community :: .+</title>', requests.get(self.featuredGames[i]).text)
+             self.featuredGames[i] = re.sub(r'<[^>]+>', "", self.featuredGames[i][0])
+             self.featuredGames[i] = re.sub(r'.+ :: ', "", self.featuredGames[i])
+             self.featuredGames[i] = re.sub('™', '', self.featuredGames[i])
+             self.featuredGames[i] = re.sub('®', '', self.featuredGames[i])
+        return self.featuredGames
+
 
     def getUserGames(self):
         '''
@@ -104,13 +116,13 @@ class SteamUser:  # kaj če bi dala ime Gamer al kj tazga? Ker ga definirava kot
 # ID mojga Steam Accounta ("Ajax")
 userID = "76561198069577640"
 jaz = SteamUser(userID)
-print(jaz)
+#print(jaz)
 
 #print(jaz.getFriends())  # test
 #print(jaz.howManyFriends())  # test
 #print(jaz.getSteamUserLevel())  # test
-print(jaz.getUserGames()) # test
-
+#print(jaz.getUserGames()) # test
+#print(jaz.getFeaturedGames())
 
 
 # for ID in self.steamFriendIDs:
