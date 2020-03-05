@@ -139,15 +139,29 @@ class SteamUser:
 
 
 
+### mogoče bova nucala.. nism zih
+##class Friend(SteamUser):
+##    # friends of our user
+##    
+##    def __init__(self, userID):
+##        super().__init__(userID)
 
-class Friend(SteamUser):
-    # friends of our user
-    
-    def __init__(self, userID):
-        super().__init__(userID)
 
 
-    
+def commonFriends(self, other):
+    '''
+        returns friends that 2 users have incommon
+    '''
+    selfFriends = SteamUser(self).getFriends()[0]
+    otherFriends = SteamUser(other).getFriends()[0]
+    incommon = []
+    for friend in selfFriends:
+        if friend in otherFriends:
+            incommon.append(friend)
+    return incommon
+
+
+
 
 
 
@@ -168,8 +182,10 @@ class Friend(SteamUser):
 
 
 # ID mojga Steam Accounta ("Ajax")
-userID = "76561198069577640"
-jaz = SteamUser(userID)
+self, selfID = 'Ajax', "76561198069577640"
+other, otherID = 'Losos', '76561198055621752'
+jaz = SteamUser(selfID)
+#print(SteamUser(otherID))
 # print(jaz)
 
 # TESTI METOD
@@ -180,6 +196,8 @@ jaz = SteamUser(userID)
 # print(jaz.getFeaturedGames())
 # print(jaz.getMostPopularGames())
 # print(jaz.getLikedGames())
+
+print(commonFriends(selfID, otherID))
 
 
 
