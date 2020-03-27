@@ -1,5 +1,8 @@
 import re
 import requests
+import random
+import operator
+
 
 
 class SteamUser:
@@ -135,9 +138,7 @@ class SteamUser:
                 break
             liked.append(game)
         return liked
-
-
-
+    
 
 ### mogoče bova nucala.. nism zih
 ##class Friend(SteamUser):
@@ -159,6 +160,60 @@ def commonFriends(self, other):
         if friend in otherFriends:
             incommon.append(friend)
     return incommon
+
+
+
+# preiskovanje omrežja
+
+def surch(self, n, informations):
+    '''
+        function starts with persone self. It randomly chooses one of it's friends
+        and gets wanted informations about this friend and saves them. It does this
+        surch n times. It returnes wanted informations.
+
+        informations is a list of function names that we want to apply on our gamers
+    '''
+    persone = self
+    tab = list({info:[]} for i, info in enumerate(informations))
+
+    for _ in range(n):
+        # gather wanted informations about our gamers
+        for i, info in enumerate(informations):
+            f = operator.methodcaller(info)
+            try:
+                numberOfFriends = f(persone)
+                tab[i][info].append(numberOfFriends)
+            except:
+                persone = self
+  
+        # set new gamer
+        friends = persone.getFriends()[1]
+        notFound = True
+        while notFound:
+            try:
+                chosenFriendID = str(random.choice(friends))
+                persone = SteamUser(chosenFriendID)
+                notFound = False
+            except:
+                pass
+
+        ### ta random izbira ni najboljša..
+        ### mogla bi upoštevat še neke uteži pa sm mal pozabla kako že
+        ### (pomembno je št. prijateljev, ker prek prjatlov prideva do polj. igralca..
+        ### sam ne vem kako to upoštevat pr preiskovanju)
+
+    return tab
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -197,10 +252,7 @@ jaz = SteamUser(selfID)
 # print(jaz.getMostPopularGames())
 # print(jaz.getLikedGames())
 
-print(commonFriends(selfID, otherID))
+# TESTI FUNKCIJ
+# print(commonFriends(selfID, otherID))
+print(surch(jaz, 5, ['howManyFriends', 'getMostPopularGames']))
 
-
-
-# for ID in self.steamFriendIDs:
-# SteamData(ID)
-# sam morva še dodat, da se enkrat prekine
