@@ -112,6 +112,20 @@ class SteamUser:
         return gameDict
 
 
+    def getPlayedTime(self):
+        '''
+            returnes how many hours a gamer spend playing games
+        '''
+        gamesWithHours = self.getOwnedGames()
+        hours = 0
+        for gameHours in gamesWithHours.values():
+            try:
+                hours += int(gameHours)
+            except:
+                hours += float(gameHours)
+        return int(hours)
+        
+
     def getMostPopularGames(self):
         '''
             returns 10 the most played games (acording to the playing times),
@@ -251,8 +265,9 @@ jaz = SteamUser(selfID)
 # print(jaz.getFeaturedGames())
 # print(jaz.getMostPopularGames())
 # print(jaz.getLikedGames())
+# print(jaz.getPlayedTime())
 
 # TESTI FUNKCIJ
 # print(commonFriends(selfID, otherID))
-print(surch(jaz, 5, ['howManyFriends', 'getMostPopularGames']))
+print(surch(jaz, 5, ['getPlayedTime', 'howManyFriends', 'getMostPopularGames']))
 
