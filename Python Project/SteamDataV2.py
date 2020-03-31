@@ -46,9 +46,9 @@ class SteamUser:
         '''
             vrne level uporabnika
         '''
-        level = re.findall(r'<span class="friendPlayerLevelNum">\d+</span></div>', self.steamProfileText)
-        level = re.sub(r'<[^>]+>', "", level[0])
-        return level
+        self.level = re.findall(r'<span class="friendPlayerLevelNum">\d+</span></div>', self.steamProfileText)
+        self.level = re.sub(r'<[^>]+>', "", self.level[0])
+        return self.level
 
     def __str__(self):
         # pomembna sta nam predvsem level in število iger
@@ -59,26 +59,28 @@ class SteamUser:
             vrne 2 tebeli: tabelo imen in tabelo id prijateljev
         '''
         # gre na stran uporabnika, kjer so prikazani vsi njegovi prijatelji
-        steamFriendsText = requests.get("https://steamcommunity.com/profiles/" + self.steamUserID + "/friends/").text
+        self.steamFriendsText = requests.get("https://steamcommunity.com/profiles/" + self.steamUserID + "/friends/").text
 
         # dobi imena vseh prijateljev in jih shrani v tabelo
-        steamFriendNames = re.findall(r'<div class="friend_block_content">.+<br>', steamFriendsText)
-        steamFriendNames = [re.sub(r'<[^>]+>', "", name) for name in steamFriendNames]
+        self.steamFriendNames = re.findall(r'<div class="friend_block_content">.+<br>', self.steamFriendsText)
+        self.steamFriendNames = [re.sub(r'<[^>]+>', "", name) for name in self.steamFriendNames]
         ##print(self.steamFriendNames, len(self.steamFriendNames))
 
         # dobi ID
-        steamFriendIDs = re.findall(r'data-steamid="\d+"', steamFriendsText)
-        steamFriendIDs = [re.sub(r'[^0-9]+', "", ID) for ID in steamFriendIDs]
+        self.steamFriendIDs = re.findall(r'data-steamid="\d+"', self.steamFriendsText)
+        self.steamFriendIDs = [re.sub(r'[^0-9]+', "", ID) for ID in self.steamFriendIDs]
 
-        return steamFriendNames, steamFriendIDs  # (ime, ID)
+        return self.steamFriendNames, self.steamFriendIDs  # (ime, ID)
 
     def howManyFriends(self):
         '''
             vrne število prijateljev
         '''
-        if len(self.getFriends()[0]) == 0:
+
+        self.numberOfFriends = len(self.getFriends()[0])
+        if self.numberOfFriends == 0:
             self.private = True
-        return len(self.getFriends()[0])
+        return self.numberOfFriends
 
     def getFeaturedGames(self):
         '''
@@ -97,54 +99,55 @@ class SteamUser:
             thisGame = re.sub('™', '', thisGame)
             featuredGames[i] = re.sub('®', '', thisGame)
 
-        return sorted(featuredGames, key=lambda x: x[1])
+        self.featuredGames = sorted(featuredGames, key=lambda x: x[1])
+        return self.featuredGames
 
     def getOwnedGames(self):
         '''
             vrne urejen slovar iger uporabnika ter pripadajoča števila ur (urejen glede na št. igranih ur)
         '''
-        gamesText = requests.get("https://steamcommunity.com/profiles/" + self.steamUserID + "/games/?tab=all",
+        self.gamesText = requests.get("https://steamcommunity.com/profiles/" + self.steamUserID + "/games/?tab=all",
                                  self.steamProfileText).text
-        gamesText = re.findall(r'<script language="javascript">[^<]+</script>', gamesText)
+        self.gamesText = re.findall(r'<script language="javascript">[^<]+</script>', self.gamesText)
 
         # če je profil privaten, se vrnemo
-        if len(gamesText) == 0:
+        if len(self.gamesText) == 0:
             return
 
         # igre
-        games = re.findall(r'"name":"[^"]+"', gamesText[0])
-        games = [re.sub(r'"name":"', "", game) for game in games]
-        games = [re.sub(r'"', "", game) for game in games]
-        games = [re.sub(r"\\[\w\d]+", "", game) for game in games]
+        self.games = re.findall(r'"name":"[^"]+"', self.gamesText[0])
+        self.games = [re.sub(r'"name":"', "", game) for game in self.games]
+        self.games = [re.sub(r'"', "", game) for game in self.games]
+        self.games = [re.sub(r"\\[\w\d]+", "", game) for game in self.games]
 
         # čas igrane igre
-        gameTime = re.findall(r'"hours_forever":"[^"]+"', gamesText[0])
-        gameTime = [re.sub(r'"hours_forever":"', "", time) for time in gameTime]
-        gameTime = [re.sub(r'"', "", time) for time in gameTime]
-        gameTime = [re.sub(r',', "", time) for time in gameTime]
+        self.gameTime = re.findall(r'"hours_forever":"[^"]+"', self.gamesText[0])
+        self.gameTime = [re.sub(r'"hours_forever":"', "", time) for time in self.gameTime]
+        self.gameTime = [re.sub(r'"', "", time) for time in self.gameTime]
+        self.gameTime = [re.sub(r',', "", time) for time in self.gameTime]
 
-        gameDict = dict()
-        for i, game in enumerate(games):
+        self.gameDict = dict()
+        for i, game in enumerate(self.games):
             try:
-                gameDict[game] = gameTime[i]
+                self.gameDict[game] = self.gameTime[i]
             except:
-                gameDict[game] = '0'
+                self.gameDict[game] = '0'
 
-        return gameDict
+        return self.gameDict
 
     def getPlayTime(self):
         '''
             vrne število preigranih ur od vseh iger
         '''
-        playTime = self.getOwnedGames()
-        totalPlayTime = 0
-        for singlePlayTime in playTime.values():
+        self.playTime = self.getOwnedGames()
+        self.totalPlayTime = 0
+        for singlePlayTime in self.playTime.values():
 
-            totalPlayTime += float(singlePlayTime)
+            self.totalPlayTime += float(singlePlayTime)
 
-        if totalPlayTime == 0:
+        if self.totalPlayTime == 0:
             self.private = True
-        return int(totalPlayTime)
+        return int(self.totalPlayTime)
 
     def getMostPopularGames(self):
         '''
@@ -159,7 +162,8 @@ class SteamUser:
             if lenght + i > 10:
                 break
             top.add(game)
-        return sorted(top)
+        self.top = sorted(top)
+        return self.top
 
     def getLikedGames(self):
         '''
@@ -171,7 +175,9 @@ class SteamUser:
             if float(ownedGames[game]) <= 50:
                 break
             liked.append(game)
-        return liked
+
+        self.liked = liked
+        return self.liked
 
 def commonFriends(self, other):
     '''
@@ -183,6 +189,7 @@ def commonFriends(self, other):
     for friend in selfFriends:
         if friend in otherFriends:
             incommon.append(friend)
+
     return incommon
 
 
@@ -206,6 +213,7 @@ def createUserObjects(establishedUsers, removedObjects):
     friendsID = establishedUsers[pivot].getFriends()
     for friend in friendsID[1]:
         if friend not in establishedUsers:
+            print(friend)
             friendObject = SteamUser(friend)
 
             # pogledamo če je privaten
@@ -220,7 +228,7 @@ def createUserObjects(establishedUsers, removedObjects):
     except:
         pass
 
-    # se znebimo še uporabnikov, kjer majo določene podatke skrite
+    # se znebimo še uporabnikov, kjer imajo določene podatke skrite
     for name in removedObjects:
         try:
             del establishedUsers[name]
@@ -266,10 +274,10 @@ def displayData(establishedUsers):
         try:
             file.write("{0:>28s} | '{1:s}'".format("User Name" ,object.steamUserName))
             file.write("{0:>28s} | '{1:s}'".format("User ID", object.steamUserID))
-            file.write("{0:>28s} | '{1:d}'".format("Level", int(object.getLevel())))
+            file.write("{0:>28s} | '{1:d}'".format("Level", int(object.level)))
             file.write("{0:>28s} | '{1:d}'".format("Number of games", int(object.numberOfGamesOwned)))
-            file.write("{0:>28s} | '{1:d}'".format("Total play time", int(object.getPlayTime())))
-            file.write("{0:>28s} | '{1:d}'".format("Number of friends", int(object.howManyFriends())))
+            file.write("{0:>28s} | '{1:d}'".format("Total play time", int(object.totalPlayTime)))
+            file.write("{0:>28s} | '{1:d}'".format("Number of friends", int(object.numberOfFriends)))
 
             file.write("")
 
@@ -279,7 +287,7 @@ def displayData(establishedUsers):
             totalHours += int(object.getPlayTime())
             totalFriends += int(object.howManyFriends())
         except:
-            print("to many calls")
+            print("To many calls, try again later.")
 
     file.write("{0:>28s} | '{1:d}'".format("Number of users", int(numberOfUsers)))
     file.write("{0:>28s} | '{1:d}'".format("Total number of levels", int(totalLevel)))
