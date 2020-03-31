@@ -273,14 +273,14 @@ def displayData(establishedUsers):
 
     for name, object in establishedUsers.items():
 
-        file.write("{0:>28s} | '{1:s}'".format("User Name" ,object.steamUserName))
-        file.write("{0:>28s} | '{1:s}'".format("User ID", object.steamUserID))
-        file.write("{0:>28s} | '{1:d}'".format("Level", int(object.getLevel())))
-        file.write("{0:>28s} | '{1:d}'".format("Number of games", int(object.numberOfGamesOwned)))
-        file.write("{0:>28s} | '{1:d}'".format("Total play time", int(object.totalPlayTime)))
-        file.write("{0:>28s} | '{1:d}'".format("Number of friends", int(object.numberOfFriends)))
+        file.write("{0:>28s} | '{1:s}'\n".format("User Name", object.steamUserName))
+        file.write("{0:>28s} | '{1:s}'\n".format("User ID", object.steamUserID))
+        file.write("{0:>28s} | '{1:d}'\n".format("Level", int(object.getLevel())))
+        file.write("{0:>28s} | '{1:d}'\n".format("Number of games", int(object.numberOfGamesOwned)))
+        file.write("{0:>28s} | '{1:d}'\n".format("Total play time", int(object.totalPlayTime)))
+        file.write("{0:>28s} | '{1:d}'\n".format("Number of friends", int(object.numberOfFriends)))
 
-        file.write("")
+        file.write("\n")
 
         numberOfUsers += 1
         totalLevel += int(object.getLevel())
@@ -289,13 +289,13 @@ def displayData(establishedUsers):
         totalFriends += int(object.numberOfFriends)
 
 
-    file.write("{0:>28s} | '{1:d}'".format("Number of users", int(numberOfUsers)))
-    file.write("{0:>28s} | '{1:d}'".format("Total number of levels", int(totalLevel)))
-    file.write("{0:>28s} | '{1:d}'".format("Total number of games", int(totalGames)))
-    file.write("{0:>28s} | '{1:d}'".format("Total play time of all users", int(totalHours)))
-    file.write("{0:>28s} | '{1:d}'".format("Total number of friends", int(totalFriends)))
+    file.write("{0:>28s} | '{1:d}'\n".format("Number of users", int(numberOfUsers)))
+    file.write("{0:>28s} | '{1:d}'\n".format("Total number of levels", int(totalLevel)))
+    file.write("{0:>28s} | '{1:d}'\n".format("Total number of games", int(totalGames)))
+    file.write("{0:>28s} | '{1:d}'\n".format("Total play time of all users", int(totalHours)))
+    file.write("{0:>28s} | '{1:d}'\n".format("Total number of friends", int(totalFriends)))
 
-    file.write("")
+    file.write("\n")
 
     file.close()
 
