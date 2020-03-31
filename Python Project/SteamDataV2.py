@@ -156,7 +156,7 @@ class SteamUser:
             in igre, ki so največ časa bile igrane
         '''
         top = set(self.getFeaturedGames())
-        games = list(self.getOwnedGames().keys())
+        games = list(self.gameDict.keys())
         lenght = len(top)
         for i, game in enumerate(games):
             if lenght + i > 10:
@@ -221,12 +221,13 @@ def createUserObjects(establishedUsers, removedObjects):
 
             if not private and friend not in removedObjects:
                 establishedUsers[friend] = friendObject
-    try:
-        for name, object in establishedUsers.items():
-            if int(object.getPlayTime()) == 0 or int(object.howManyFriends()) == 0:
+
+    for name, object in establishedUsers.items():
+        if int(object.getPlayTime()) == 0 or int(object.howManyFriends()) == 0:
+            try:
                 removedObjects.append(name)
-    except:
-        pass
+            except:
+                pass
 
     # se znebimo še uporabnikov, kjer imajo določene podatke skrite
     for name in removedObjects:
@@ -262,7 +263,7 @@ def displayData(establishedUsers):
     try:
         file = open("Stem Data.txt", "x")
     except:
-        file = open("myfile.txt", "w")
+        file = open("Stem Data.txt", "w")
 
     numberOfUsers = 0
     totalHours = 0
@@ -271,23 +272,22 @@ def displayData(establishedUsers):
     totalLevel = 0
 
     for name, object in establishedUsers.items():
-        try:
-            file.write("{0:>28s} | '{1:s}'".format("User Name" ,object.steamUserName))
-            file.write("{0:>28s} | '{1:s}'".format("User ID", object.steamUserID))
-            file.write("{0:>28s} | '{1:d}'".format("Level", int(object.level)))
-            file.write("{0:>28s} | '{1:d}'".format("Number of games", int(object.numberOfGamesOwned)))
-            file.write("{0:>28s} | '{1:d}'".format("Total play time", int(object.totalPlayTime)))
-            file.write("{0:>28s} | '{1:d}'".format("Number of friends", int(object.numberOfFriends)))
 
-            file.write("")
+        file.write("{0:>28s} | '{1:s}'".format("User Name" ,object.steamUserName))
+        file.write("{0:>28s} | '{1:s}'".format("User ID", object.steamUserID))
+        file.write("{0:>28s} | '{1:d}'".format("Level", int(object.getLevel())))
+        file.write("{0:>28s} | '{1:d}'".format("Number of games", int(object.numberOfGamesOwned)))
+        file.write("{0:>28s} | '{1:d}'".format("Total play time", int(object.totalPlayTime)))
+        file.write("{0:>28s} | '{1:d}'".format("Number of friends", int(object.numberOfFriends)))
 
-            numberOfUsers += 1
-            totalLevel += int(object.getLevel())
-            totalGames += int(object.numberOfGamesOwned)
-            totalHours += int(object.getPlayTime())
-            totalFriends += int(object.howManyFriends())
-        except:
-            print("To many calls, try again later.")
+        file.write("")
+
+        numberOfUsers += 1
+        totalLevel += int(object.getLevel())
+        totalGames += int(object.numberOfGamesOwned)
+        totalHours += int(object.totalPlayTime)
+        totalFriends += int(object.numberOfFriends)
+
 
     file.write("{0:>28s} | '{1:d}'".format("Number of users", int(numberOfUsers)))
     file.write("{0:>28s} | '{1:d}'".format("Total number of levels", int(totalLevel)))
@@ -314,7 +314,7 @@ def displayData(establishedUsers):
 
 # naredimo nekaj čez SIZE-objektov, kjer vsak objekt prikazuje določenega uporabnika
 # podamo poljubno število, ki bo predstavljala spodno mejo za velikost baze
-SIZE = 10
+SIZE = 2
 
 # ID mojga Steam Accounta ("Ajax")
 # tukaj podamo uporabnika iz katerega bomo pridobil vse podatke
