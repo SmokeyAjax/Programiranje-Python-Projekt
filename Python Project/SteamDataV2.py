@@ -2,7 +2,7 @@ import re
 import requests
 import random
 import operator
-
+import matplotlib.pyplot as plt
 
 class SteamUser:
     # en igralec
@@ -12,9 +12,15 @@ class SteamUser:
         self.steamProfileText = requests.get("https://steamcommunity.com/profiles/" + userID).text
 
         # ime uporabnika
-        steamUserName = re.findall(r'<title>Steam Community :: .+</title>', self.steamProfileText)
-        steamUserName = re.sub(r'<[^>]+>', "", steamUserName[0])
-        self.steamUserName = re.sub(r'.+ :: ', "", steamUserName)
+        self.steamUserName = re.findall(r'<title>Steam Community :: .+</title>', self.steamProfileText)
+        if len(self.steamUserName) == 0:
+            self.private = True
+            return
+        else:
+            self.private = False
+
+        self.steamUserName = re.sub(r'<[^>]+>', "", self.steamUserName[0])
+        self.steamUserName = re.sub(r'.+ :: ', "", self.steamUserName)
 
         # koliko iger ima uporabnik
         numberOfGamesOwned = re.findall(r"\d+ games owned", self.steamProfileText)
@@ -23,7 +29,6 @@ class SteamUser:
         if len(numberOfGamesOwned) == 0:
             self.private = True
         else:
-            self.private = False
             self.numberOfGamesOwned = numberOfGamesOwned[0].split(" ")[0]
 
 
@@ -80,6 +85,7 @@ class SteamUser:
         self.numberOfFriends = len(self.getFriends()[0])
         if self.numberOfFriends == 0:
             self.private = True
+            return 0
         return self.numberOfFriends
 
     def getFeaturedGames(self):
@@ -139,14 +145,16 @@ class SteamUser:
         '''
             vrne število preigranih ur od vseh iger
         '''
-        self.playTime = self.getOwnedGames()
+        self.gameDict = self.getOwnedGames()
         self.totalPlayTime = 0
-        for singlePlayTime in self.playTime.values():
 
+        if self.gameDict == None:
+            self.private = True
+            return 0
+
+        for singlePlayTime in self.gameDict.values():
             self.totalPlayTime += float(singlePlayTime)
 
-        if self.totalPlayTime == 0:
-            self.private = True
         return int(self.totalPlayTime)
 
     def getMostPopularGames(self):
@@ -223,6 +231,13 @@ def createUserObjects(establishedUsers, removedObjects):
                 establishedUsers[friend] = friendObject
 
     for name, object in establishedUsers.items():
+        try:
+            print(object.getPlayTime())
+            print("Če je zgorna stvar None, si prevečkrat klicav.")
+            print(int(object.howManyFriends()))
+        except:
+            pass
+
         if int(object.getPlayTime()) == 0 or int(object.howManyFriends()) == 0:
             try:
                 removedObjects.append(name)
@@ -252,7 +267,11 @@ def setUpDataSet(size, selfID):
 
     while len(establishedUsers) < size:
         establishedUsers, removedObjects = createUserObjects(establishedUsers, removedObjects)
-        print(len(establishedUsers), len(removedObjects))
+        if (int(len(establishedUsers) / int(size))* 100 ) >= 100:
+            print("Data collected!")
+        else:
+            print("Progress: {0:d} %".format( int(len(establishedUsers) / int(size)* 100) ) )
+            print(len(establishedUsers), size)
 
     return establishedUsers
 
@@ -271,22 +290,33 @@ def displayData(establishedUsers):
     totalFriends = 0
     totalLevel = 0
 
+    combinedGamesDict = dict()
+
     for name, object in establishedUsers.items():
+        try:
+            file.write("{0:>28s} | '{1:s}'\n".format("User Name", object.steamUserName))
+            file.write("{0:>28s} | '{1:s}'\n".format("User ID", object.steamUserID))
+            file.write("{0:>28s} | '{1:d}'\n".format("Level", int(object.getLevel())))
+            file.write("{0:>28s} | '{1:d}'\n".format("Number of games", int(object.numberOfGamesOwned)))
+            file.write("{0:>28s} | '{1:d}'\n".format("Total play time", int(object.totalPlayTime)))
+            file.write("{0:>28s} | '{1:d}'\n".format("Number of friends", int(object.numberOfFriends)))
 
-        file.write("{0:>28s} | '{1:s}'\n".format("User Name", object.steamUserName))
-        file.write("{0:>28s} | '{1:s}'\n".format("User ID", object.steamUserID))
-        file.write("{0:>28s} | '{1:d}'\n".format("Level", int(object.getLevel())))
-        file.write("{0:>28s} | '{1:d}'\n".format("Number of games", int(object.numberOfGamesOwned)))
-        file.write("{0:>28s} | '{1:d}'\n".format("Total play time", int(object.totalPlayTime)))
-        file.write("{0:>28s} | '{1:d}'\n".format("Number of friends", int(object.numberOfFriends)))
+            file.write("\n")
 
-        file.write("\n")
 
-        numberOfUsers += 1
-        totalLevel += int(object.getLevel())
-        totalGames += int(object.numberOfGamesOwned)
-        totalHours += int(object.totalPlayTime)
-        totalFriends += int(object.numberOfFriends)
+            numberOfUsers += 1
+            totalLevel += int(object.getLevel())
+            totalGames += int(object.numberOfGamesOwned)
+            totalHours += int(object.totalPlayTime)
+            totalFriends += int(object.numberOfFriends)
+
+            for game, time in object.gameDict.items():
+                if game in combinedGamesDict.keys():
+                    combinedGamesDict[game] += float(time)
+                else:
+                    combinedGamesDict[game] = float(time)
+        except:
+            pass
 
 
     file.write("{0:>28s} | '{1:d}'\n".format("Number of users", int(numberOfUsers)))
@@ -299,7 +329,68 @@ def displayData(establishedUsers):
 
     file.close()
 
+    # še grafi
+    # top 30 games by play time
+    x = sorted(combinedGamesDict, key=combinedGamesDict.get, reverse=True)[:30]
+    x.append("Other")
 
+    y = list()
+    otherTime = 0
+
+    for game, time in combinedGamesDict.items():
+        if game in x:
+            y.append(int(time))
+        else:
+            otherTime += int(time)
+
+    y.sort()
+    y = y[::-1]
+    y.append(otherTime)
+
+    fig, ax = plt.subplots(figsize=(15, 12), dpi=100)
+    plt.title("Most Played Games by Time")
+    plt.xlabel("Games")
+    plt.ylabel("Play Time [hours]")
+    barPLot = plt.bar(x, y, width=0.5)
+    plt.xticks(x, rotation='vertical')
+    plt.subplots_adjust(bottom=0.3, top=0.9)
+
+    for i, rect in enumerate(barPLot):
+        height = rect.get_height()
+        ax.text(rect.get_x() + rect.get_width() / 2., 1.05 * height,
+                y[i],
+                ha='center', va='bottom', rotation=0)
+
+    plt.savefig("Most Played Games by Time.pdf")
+
+    # top 20 games [%]
+    # Tortni diagram
+    x = sorted(combinedGamesDict, key=combinedGamesDict.get, reverse=True)[:20]
+    x.append("Other")
+
+    y = list()
+    otherTime = 0
+
+    for game, time in combinedGamesDict.items():
+        if game in x:
+            y.append(int(time))
+        else:
+            otherTime += int(time)
+
+    y.sort()
+    y = y[::-1]
+    y.append(otherTime)
+
+    explode = list()
+    for i in range(1, len(y)):
+        explode.append(0)
+    explode.append(0.1)
+
+    fig, ax = plt.subplots(figsize=(15, 12), dpi=100)
+    plt.title("Most Played Games by Time [%]")
+    plt.pie(y, labels=x, explode=explode, autopct='%1.1f%%', shadow=True, startangle=140)
+    plt.axis('equal')
+    plt.savefig("Most Played Games by Time [%].pdf")
 
 '''
     za vsakega prijatelja našga uporabnika ustvariva svoj objekt Friend..
@@ -314,7 +405,7 @@ def displayData(establishedUsers):
 
 # naredimo nekaj čez SIZE-objektov, kjer vsak objekt prikazuje določenega uporabnika
 # podamo poljubno število, ki bo predstavljala spodno mejo za velikost baze
-SIZE = 2
+SIZE = 6
 
 # ID mojga Steam Accounta ("Ajax")
 # tukaj podamo uporabnika iz katerega bomo pridobil vse podatke
