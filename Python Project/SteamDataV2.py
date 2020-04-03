@@ -1,7 +1,6 @@
 import re
 import requests
 import random
-import operator
 import matplotlib.pyplot as plt
 
 class SteamUser:
@@ -39,6 +38,7 @@ class SteamUser:
     def privateProfile(self):
         """
         zbriše objekt, če je privaten profil in vrne stanje privatnosti
+        to pomojem sploh ne delju tako kot mislem...
         """
         if self.private == True:
             del self
@@ -88,6 +88,7 @@ class SteamUser:
             return 0
         return self.numberOfFriends
 
+    """
     def getFeaturedGames(self):
         '''
             vrne "Featured Games"
@@ -107,6 +108,7 @@ class SteamUser:
 
         self.featuredGames = sorted(featuredGames, key=lambda x: x[1])
         return self.featuredGames
+    """
 
     def getOwnedGames(self):
         '''
@@ -157,6 +159,7 @@ class SteamUser:
 
         return int(self.totalPlayTime)
 
+    """
     def getMostPopularGames(self):
         '''
             vrne seznam
@@ -199,10 +202,9 @@ def commonFriends(self, other):
             incommon.append(friend)
 
     return incommon
-
+"""
 
 # preiskovanje omrežja
-
 def createUserObjects(establishedUsers, removedObjects):
     """
     iz enega uporabnika ustvari nov objekt za vsakega prijatelja
@@ -214,14 +216,30 @@ def createUserObjects(establishedUsers, removedObjects):
     for key in establishedUsers.keys():
         keyArray.append(key)
 
-    length = random.randint(0, len(establishedUsers) - 1)
-    pivot = keyArray[length]
+    pivot = 0
+    end = False
+
+    try:
+        length = random.randint(0, len(establishedUsers) - 1)
+        pivot = keyArray[length]
+    except:
+        print("You've made too many calls. Please try again later.")
+        end = True
+        return establishedUsers, removedObjects, end
+
+    # delamo seznam že uporabljenih pivotov, da njih ne kličemo še enkrat in s tem proces malo pospešimo
+    pivotList = list()
+
+    while pivot in pivotList:
+        length = random.randint(0, len(establishedUsers) - 1)
+        pivot = keyArray[length]
+
+    pivotList.append(pivot)
 
     # naredi objekt za vse prijatelje, ki nimajo privatne profile
     friendsID = establishedUsers[pivot].getFriends()
     for friend in friendsID[1]:
         if friend not in establishedUsers:
-            print(friend)
             friendObject = SteamUser(friend)
 
             # pogledamo če je privaten
@@ -230,34 +248,29 @@ def createUserObjects(establishedUsers, removedObjects):
             if not private and friend not in removedObjects:
                 establishedUsers[friend] = friendObject
 
+    # pogledamo še če ima kakšne določene podatke skrite, če jih imajo, jih tud ne uporabimo
     for name, object in establishedUsers.items():
-        try:
-            print(object.getPlayTime())
-            print("Če je zgorna stvar None, si prevečkrat klicav.")
-            print(int(object.howManyFriends()))
-        except:
-            pass
-
         if int(object.getPlayTime()) == 0 or int(object.howManyFriends()) == 0:
             try:
                 removedObjects.append(name)
             except:
                 pass
 
-    # se znebimo še uporabnikov, kjer imajo določene podatke skrite
+    # jih še zbrišemo
     for name in removedObjects:
         try:
             del establishedUsers[name]
         except:
             pass
 
-    return establishedUsers, removedObjects
+    return establishedUsers, removedObjects, end
 
 
 def setUpDataSet(size, selfID):
     """
     vrne seznam objektov, kjer vsak objekt prikazuje določenega uporabnika
     """
+    # določimo od koga dobimo ostale uporabnika
     pivot = SteamUser(selfID)
 
     establishedUsers = dict()
@@ -265,19 +278,24 @@ def setUpDataSet(size, selfID):
 
     removedObjects = list()
 
+    # kličemo metodo za generiranje objektov, dokler velikost baze ni večja od Size
     while len(establishedUsers) < size:
-        establishedUsers, removedObjects = createUserObjects(establishedUsers, removedObjects)
+        establishedUsers, removedObjects, end = createUserObjects(establishedUsers, removedObjects)
+        if end == True:
+            print("Data collected, but not fully!")
+            break
         if (int(len(establishedUsers) / int(size))* 100 ) >= 100:
             print("Data collected!")
         else:
             print("Progress: {0:d} %".format( int(len(establishedUsers) / int(size)* 100) ) )
-            print(len(establishedUsers), size)
 
     return establishedUsers
 
 def displayData(establishedUsers):
     """
     predstavimo in vizualiziramo podatke
+    naredi: eno tektovno datoteko
+            dva diagrama: stolpični ter tortni diagram
     """
     try:
         file = open("Stem Data.txt", "x")
@@ -294,29 +312,30 @@ def displayData(establishedUsers):
 
     for name, object in establishedUsers.items():
         try:
+            # nekateri uporabniki vsebujejo znake v imenu, ki jih ne moremo izpisati (npr: \u272a)
             file.write("{0:>28s} | '{1:s}'\n".format("User Name", object.steamUserName))
-            file.write("{0:>28s} | '{1:s}'\n".format("User ID", object.steamUserID))
-            file.write("{0:>28s} | '{1:d}'\n".format("Level", int(object.getLevel())))
-            file.write("{0:>28s} | '{1:d}'\n".format("Number of games", int(object.numberOfGamesOwned)))
-            file.write("{0:>28s} | '{1:d}'\n".format("Total play time", int(object.totalPlayTime)))
-            file.write("{0:>28s} | '{1:d}'\n".format("Number of friends", int(object.numberOfFriends)))
-
-            file.write("\n")
-
-
-            numberOfUsers += 1
-            totalLevel += int(object.getLevel())
-            totalGames += int(object.numberOfGamesOwned)
-            totalHours += int(object.totalPlayTime)
-            totalFriends += int(object.numberOfFriends)
-
-            for game, time in object.gameDict.items():
-                if game in combinedGamesDict.keys():
-                    combinedGamesDict[game] += float(time)
-                else:
-                    combinedGamesDict[game] = float(time)
         except:
-            pass
+            file.write("{0:>28s} | '{1:s}'\n".format("User Name", "*Unwritable name*"))
+        file.write("{0:>28s} | '{1:s}'\n".format("User ID", object.steamUserID))
+        file.write("{0:>28s} | '{1:d}'\n".format("Level", int(object.getLevel())))
+        file.write("{0:>28s} | '{1:d}'\n".format("Number of games", int(object.numberOfGamesOwned)))
+        file.write("{0:>28s} | '{1:d}'\n".format("Total play time", int(object.totalPlayTime)))
+        file.write("{0:>28s} | '{1:d}'\n".format("Number of friends", int(object.numberOfFriends)))
+
+        file.write("\n")
+
+
+        numberOfUsers += 1
+        totalLevel += int(object.getLevel())
+        totalGames += int(object.numberOfGamesOwned)
+        totalHours += int(object.totalPlayTime)
+        totalFriends += int(object.numberOfFriends)
+
+        for game, time in object.gameDict.items():
+            if game in combinedGamesDict.keys():
+                combinedGamesDict[game] += float(time)
+            else:
+                combinedGamesDict[game] = float(time)
 
 
     file.write("{0:>28s} | '{1:d}'\n".format("Number of users", int(numberOfUsers)))
@@ -329,7 +348,7 @@ def displayData(establishedUsers):
 
     file.close()
 
-    # še grafi
+    # še grafi, prvo stolpični diagram
     # top 30 games by play time
     x = sorted(combinedGamesDict, key=combinedGamesDict.get, reverse=True)[:30]
     x.append("Other")
@@ -355,6 +374,7 @@ def displayData(establishedUsers):
     plt.xticks(x, rotation='vertical')
     plt.subplots_adjust(bottom=0.3, top=0.9)
 
+    # da se nad stolpcem izpiše še količino oz. višino stolpca
     for i, rect in enumerate(barPLot):
         height = rect.get_height()
         ax.text(rect.get_x() + rect.get_width() / 2., 1.05 * height,
@@ -392,25 +412,17 @@ def displayData(establishedUsers):
     plt.axis('equal')
     plt.savefig("Most Played Games by Time [%].pdf")
 
-'''
-    za vsakega prijatelja našga uporabnika ustvariva svoj objekt Friend..
-    definirava:
-        skupni prijatelji (samo direktni)
-        top 3 prijatelji glede na
-            level
-            št. imetih iger
-        katere so najbolj igrane igre med prijatelji
-'''
 
-
-# naredimo nekaj čez SIZE-objektov, kjer vsak objekt prikazuje določenega uporabnika
-# podamo poljubno število, ki bo predstavljala spodno mejo za velikost baze
-SIZE = 6
+# Naredimo nekaj čez SIZE-objektov, kjer vsak objekt prikazuje določenega uporabnika. Size je spodnja meja.
+# Podamo poljubno število (ne preveliko, ker je število klicev na stran omejeno).
+SIZE = 20
 
 # ID mojga Steam Accounta ("Ajax")
 # tukaj podamo uporabnika iz katerega bomo pridobil vse podatke
+# v resnici potrebujemo samo ID
 SELF, ID = 'Ajax', "76561198069577640"
 
-
+# kličemo metode za uspostavitev bazem ki nam jo tudi vrne
 establishedUsers = setUpDataSet(SIZE, ID)
+# kličemo še metodo da dobljene podatjke predtavi
 displayData(establishedUsers)
