@@ -3,8 +3,10 @@ import requests
 import random
 import matplotlib.pyplot as plt
 
+
 class SteamUser:
     # en igralec
+
 
     def __init__(self, userID):
         self.steamUserID = userID
@@ -31,9 +33,9 @@ class SteamUser:
             self.numberOfGamesOwned = numberOfGamesOwned[0].split(" ")[0]
 
 
-
     def __repr__(self):
         return self.__class__.__name__ + "(" + self.steamUserID + ")"
+
 
     def privateProfile(self):
         """
@@ -54,9 +56,11 @@ class SteamUser:
         self.level = re.sub(r'<[^>]+>', "", self.level[0])
         return self.level
 
+
     def __str__(self):
         # pomembna sta nam predvsem level in število iger
         return f'Uporabnik {self.steamUserName} je level {self.getLevel()} in ima {self.numberOfGamesOwned} različnih iger.'
+
 
     def getFriends(self):
         '''
@@ -75,6 +79,7 @@ class SteamUser:
         self.steamFriendIDs = [re.sub(r'[^0-9]+', "", ID) for ID in self.steamFriendIDs]
 
         return self.steamFriendNames, self.steamFriendIDs  # (ime, ID)
+
 
     def howManyFriends(self):
         '''
@@ -120,6 +125,7 @@ class SteamUser:
                 self.gameDict[game] = '0'
 
         return self.gameDict
+
 
     def getPlayTime(self):
         '''
@@ -223,10 +229,11 @@ def setUpDataSet(size, selfID):
 
     return establishedUsers
 
+
 def displayData(establishedUsers):
     """
     predstavimo in vizualiziramo podatke
-    naredi: eno tektovno datoteko
+    naredi: eno tekstovno datoteko
             dva diagrama: stolpični ter tortni diagram
     """
     try:
