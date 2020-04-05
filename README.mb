@@ -1,10 +1,9 @@
 par: Andrej Treven in Tamara Pogačar
 
-Iz spletne strani Steam sva pobrala podatke uporabnikov: ime, ID, level, število iger, igre, ki jih ima, preigrane ure in
+Iz spletne strani Steam sva pobrala podatke uporabnikov: ime, ID, level, število iger, seznam iger, preigrane ure in
 seznam prijateljev.
 Ko sva dobila podatke enega uporabnika, sva nato dobila še podatke njegovih prijatljev. Potem sva iz seznama uporabnikov, ki
-sva jih že naredila, naključno enega izbrala (ki ga do slej še nisva za to) in od njega pridobiva ostale uporabnike. Če se
+sva jih že obedalala, naključno enega izbrala (ki ga do slej še nisva za to) in od njega pridobiva ostale uporabnike. Če se
 vmes najde uporabnik, ki ima kakrešen koli podatek skrit ali pa ima privaten profil, ga spustiva.
 Ko zbereva neko bazo podatkov, ustvarimo text datoteko, kjer so za vsakega posameznika prikazani njegovi podatki. Na koncu
-datoteke pa še skupni podatki vseh uporabnikov. Za tem se pa izrišeta še dva grafa: en stolpični, ter tortni.
-
+datoteke pa še skupni podatki vseh uporabnikov. Za tem se pa izrišeta še dva grafa: en stolpični, ter en tortni.
